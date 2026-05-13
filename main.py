@@ -20,14 +20,37 @@ app = FastAPI(
     redoc_url=None
 )
 
-# 3. Security: Configure CORS
-# In strict production, change "*" to your actual frontend domain (e.g., ["https://myfrontend.com"])
+# 3. Security: Configure CORS - RESTRICTED to authorized origins only
+# ============================================
+# IMPORTANT: Update these origins for your deployment
+# Local Development: http://localhost:5173
+# Production (Vercel): https://ethan-alpha.vercel.app
+# ============================================
+
+allowed_origins = [
+    "https://ethan-alpha.vercel.app",  # Production
+    "http://localhost:5173",            # Local development (Vite default)
+    "http://localhost:3000",            # Alternative local port
+]
+
+# Optional: Read from environment variable for flexibility
+if os.getenv("ALLOWED_ORIGINS"):
+    allowed_origins = os.getenv("ALLOWED_ORIGINS").split(",")
+    allowed_origins = [origin.strip() for origin in allowed_origins]
+
+logger.info(f"✅ CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=allowed_origins,      # ✅ Only specified origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],      # ✅ Only GET and POST
+    allow_headers=[
+        "Content-Type",
+        "x-api-key",
+        "Authorization"
+    ],                                   # ✅ Only required headers
+    max_age=86400,                       # Cache preflight requests for 24 hours
 )
 
 # 4. Ensure Audio Storage Exists and Serve It
